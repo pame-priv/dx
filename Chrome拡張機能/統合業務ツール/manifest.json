@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "統合業務ツール",
+  "version": "1.0.0",
+  "description": "複数の業務機能を統合したサイドパネルツール",
+  "permissions": ["sidePanel", "storage"],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "統合業務ツール"
+  },
+  "web_accessible_resources": [{
+    "resources": ["common/*", "業務A/*", "業務B/*", "業務C/*"],
+    "matches": ["<all_urls>"]
+  }]
+}

@@ -1,0 +1,284 @@
+:root {
+  /* 業務A: パステルブルー */
+  --theme-bg: #e8f4fc;
+  --theme-accent: #7eb8da;
+  --theme-accent-dark: #5a9bc5;
+  
+  /* ベースカラー */
+  --bg-body: #f5f7fa;
+  --bg-card: #ffffff;
+  --bg-card-hover: #ffffff;
+  
+  /* テキスト */
+  --text-primary: #2d3748;
+  --text-secondary: #5a6778;
+  --text-muted: #8896a6;
+  
+  /* シャドウ */
+  --shadow-card: 
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.1);
+  --shadow-card-active:
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  
+  /* トランジション */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-normal: 250ms;
+  --duration-fast: 150ms;
+
+  /* フォントサイズ */
+  font-size: 16px;
+}
+
+/* 業務ごとのパステルテーマ */
+body[data-business="gyomuA"] {
+  --theme-bg: #e8f4fc;
+  --theme-accent: #7eb8da;
+  --theme-accent-dark: #5a9bc5;
+}
+
+body[data-business="gyomuB"] {
+  --theme-bg: #e6f7f1;
+  --theme-accent: #7ed3b8;
+  --theme-accent-dark: #5abf9e;
+}
+
+body[data-business="gyomuC"] {
+  --theme-bg: #f3e8fc;
+  --theme-accent: #c4a7e3;
+  --theme-accent-dark: #a87fd4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: 0.875rem;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========================================
+   ヘッダー
+======================================== */
+.app-header {
+  padding: 1rem;
+  background-color: var(--theme-bg);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  transition: background-color var(--duration-normal) var(--ease-out-expo);
+}
+
+.app-header select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%235a6778' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  box-shadow: var(--shadow-card);
+  transition: 
+    box-shadow var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-fast) ease;
+}
+
+.app-header select:hover {
+  border-color: var(--theme-accent);
+}
+
+.app-header select:focus {
+  outline: none;
+  border-color: var(--theme-accent-dark);
+  box-shadow: 
+    var(--shadow-card),
+    0 0 0 3px rgba(126, 184, 218, 0.2);
+}
+
+/* ========================================
+   メインコンテナ
+======================================== */
+.container {
+  padding: 1rem;
+}
+
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ========================================
+   メニューボタン（カード風）
+======================================== */
+.menu-button {
+  position: relative;
+  width: 100%;
+  padding: 1rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: 
+    transform var(--duration-normal) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-fast) ease;
+  overflow: hidden;
+}
+
+/* 左側のアクセントライン */
+.menu-button::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--theme-accent);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform var(--duration-normal) var(--ease-out-expo);
+  border-radius: 4px 0 0 4px;
+}
+
+.menu-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.menu-button:hover::before {
+  transform: scaleY(1);
+}
+
+.menu-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-card-active);
+  transition-duration: 50ms;
+}
+
+/* ========================================
+   アコーディオン
+======================================== */
+.accordion {
+  background-color: var(--bg-card);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: box-shadow var(--duration-normal) var(--ease-out-expo);
+}
+
+.accordion:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 1rem 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-primary);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.accordion-header:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.accordion-header:active {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* 矢印アイコン */
+.accordion-header::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: rotate(-45deg) translateY(-2px);
+  transition: transform var(--duration-normal) var(--ease-out-expo);
+  flex-shrink: 0;
+}
+
+.accordion-header.open::after {
+  transform: rotate(45deg) translateY(0);
+}
+
+/* アコーディオンコンテンツ */
+.accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-normal) var(--ease-out-expo);
+  overflow: hidden;
+}
+
+.accordion-content.open {
+  grid-template-rows: 1fr;
+}
+
+.accordion-content-inner {
+  overflow: hidden;
+  padding: 0 0.75rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.accordion-content:not(.open) .accordion-content-inner {
+  padding-bottom: 0;
+}
+
+/* アコーディオン内のメニューボタン */
+.accordion-content .menu-button {
+  padding: 0.75rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  background-color: var(--bg-body);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.accordion-content .menu-button:hover {
+  background-color: var(--theme-bg);
+  color: var(--text-primary);
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.accordion-content .menu-button:hover::before {
+  transform: scaleY(0.6);
+}
+
+.accordion-content .menu-button:active {
+  background-color: var(--theme-bg);
+  opacity: 0.8;
+}

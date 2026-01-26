@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      padding: 16px 32px 120px 32px;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+    
+    .header {
+      margin-bottom: 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #f0f2f5;
+      padding-top: 16px;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .date-picker {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .calendar-link {
+      padding: 12px 20px;
+      background: white;
+      color: #333;
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+    
+    .calendar-link:hover {
+      background: #f5f5f5;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .date-picker input {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+    
+    .date-picker input:focus {
+      outline: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      transform: translateY(-1px);
+    }
+    
+    .date-picker button {
+      padding: 12px 24px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+    
+    .date-picker button:hover {
+      background: #3367d6;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    
+    .update-button {
+      padding: 12px 24px;
+      background: #34a853;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+      animation: pulse 2s infinite;
+    }
+    
+    .update-button:hover {
+      background: #2d9249;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4); }
+      50% { box-shadow: 0 4px 20px rgba(52, 168, 83, 0.8); }
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .status-message {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .status-loading {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .status-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .status-error {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .shift-container {
+      background: transparent;
+    }
+    
+    .day-section {
+      border-bottom: none;
+      margin-bottom: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    
+    .day-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .day-header {
+      background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%);
+      padding: 16px 20px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #333;
+      border-bottom: 1px solid #e8e8e8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.3px;
+    }
+    
+    .day-header.holiday {
+      background: linear-gradient(90deg, #fce4ec 0%, #ffffff 100%);
+    }
+    
+    .time-header {
+      display: flex;
+      border-bottom: 1px solid #e8e8e8;
+      background: #fafbfc;
+    }
+    
+    .name-column {
+      width: 120px;
+      min-width: 120px;
+      padding: 12px 16px;
+      border-right: 1px solid #e8e8e8;
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .time-slots {
+      display: flex;
+      flex: 1;
+    }
+    
+    .time-slot {
+      flex: 1;
+      text-align: left;
+      padding: 12px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #999;
+      border-right: 1px solid #f0f0f0;
+    }
+    
+    .time-slot:last-child {
+      border-right: none;
+    }
+    
+    .member-row {
+      display: flex;
+      border-bottom: 1px solid #f5f5f5;
+      min-height: 44px;
+      transition: background 0.15s ease;
+    }
+    
+    .member-row:hover {
+      background: #f5f7fa;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .member-row:hover .bar {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
+    
+    .member-row:hover .bar-event:hover,
+    .member-row:hover .bar-rest:hover,
+    .member-row:hover .bar-yukyu:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transform: translateY(-2px);
+    }
+    
+    .member-row:last-child {
+      border-bottom: none;
+    }
+    
+    .member-name {
+      width: 120px;
+      min-width: 120px;
+      padding: 12px 16px;
+      border-right: 1px solid #e8e8e8;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .member-schedule {
+      flex: 1;
+      position: relative;
+      height: 44px;
+      background: transparent;
+    }
+    
+    .member-schedule::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(100% / 9 - 1px),
+        #f0f0f0 calc(100% / 9 - 1px),
+        #f0f0f0 calc(100% / 9)
+      );
+      pointer-events: none;
+    }
+    
+    .bar-container {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      left: 0;
+      right: 0;
+    }
+    
+    .bar {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .bar-default {
+      background: #fff8e1;
+    }
+    
+    .bar-event {
+      background: #6b9ac4;
+      z-index: 2;
+      border-left: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .bar-rest {
+      background: #c8e6c9;
+      z-index: 2;
+      border-left: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .bar-rest .bar-content {
+      color: #333;
+      text-shadow: none;
+    }
+    
+    .bar-yukyu {
+      background: #fff5f7;
+      z-index: 1;
+    }
+    
+    .bar-yukyu .bar-content {
+      color: #333;
+      text-shadow: none;
+    }
+    
+    .bar-content {
+      padding: 0 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    
+    .bar-split {
+      width: calc(50% - 1px);
+    }
+    
+    .bar-split.left {
+      left: 0;
+    }
+    
+    .bar-split.right {
+      left: calc(50% + 1px);
+    }
+    
+    .bar-alert {
+      background: #8e7cc3;
+    }
+    
+    .holiday-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(252, 228, 236, 0.95);
+      font-size: 20px;
+      font-weight: 700;
+      color: #c2185b;
+      letter-spacing: 2px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #999;
+      font-size: 14px;
+    }
+    
+    .off-day {
+      background: #fafafa;
+    }
+    
+    .off-day .bar-container {
+      display: none;
+    }
+    
+    /* ツールチップ */
+    .bar {
+      cursor: pointer;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      z-index: 1000;
+      pointer-events: none;
+      max-width: 250px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .tooltip-title {
+      font-weight: 600;
+    }
+    
+    .tooltip-time {
+      font-size: 11px;
+      color: #ccc;
+      margin-top: 4px;
+    }
+    
+    /* ポップアップ */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .popup-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .popup-header {
+      padding: 20px;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    
+    .popup-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    .popup-time {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .popup-footer {
+      padding: 16px 20px;
+      border-top: 1px solid #e8e8e8;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .popup-button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .popup-button-close {
+      background: #f0f0f0;
+      color: #333;
+      border: none;
+    }
+    
+    .popup-button-close:hover {
+      background: #e0e0e0;
+    }
+    
+    .popup-button-open {
+      background: #4285f4;
+      color: white;
+      border: none;
+      text-decoration: none;
+    }
+    
+    .popup-button-open:hover {
+      background: #3367d6;
+    }
+    
+    /* 掲示板 */
+    .bulletin-board {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .bulletin-header {
+      background: linear-gradient(90deg, #e3f2fd 0%, #ffffff 100%);
+      padding: 16px 20px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #1565c0;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    
+    .bulletin-content {
+      padding: 16px 20px;
+    }
+    
+    .bulletin-posts {
+      margin-bottom: 16px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    
+    .bulletin-pinned-area {
+      margin-bottom: 12px;
+      border-bottom: 2px solid #e8e8e8;
+      padding-bottom: 12px;
+    }
+    
+    .bulletin-post {
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    
+    .bulletin-post.pinned {
+      background: #fffbea;
+      border-left: 3px solid #ffc107;
+    }
+    
+    .bulletin-post:last-child {
+      margin-bottom: 0;
+    }
+    
+    .bulletin-post-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding-right: 32px;
+    }
+    
+    .bulletin-post-meta {
+      font-size: 11px;
+      color: #999;
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .bulletin-post-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .bulletin-post-action {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .bulletin-post-action:hover {
+      background: #e0e0e0;
+      color: #333;
+    }
+    
+    .bulletin-pin-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      transition: all 0.2s ease;
+      filter: grayscale(100%) opacity(0.4);
+      position: absolute;
+      top: 8px;
+      right: 8px;
+    }
+    
+    .bulletin-pin-button:hover {
+      transform: scale(1.2) rotate(15deg);
+      filter: grayscale(100%) opacity(0.7);
+    }
+    
+    .bulletin-pin-button.pinned {
+      filter: grayscale(0%) opacity(1);
+    }
+    
+    .bulletin-pin-button.pinned:hover {
+      transform: scale(1.2) rotate(-15deg);
+    }
+    
+    .bulletin-pin-button:disabled {
+      cursor: wait;
+      pointer-events: none;
+    }
+    
+    body.processing {
+      cursor: wait;
+    }
+    
+    body.processing * {
+      pointer-events: none;
+    }
+    
+    body.processing .bulletin-pin-button {
+      pointer-events: auto;
+    }
+    
+    .bulletin-input-area {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    
+    .bulletin-textarea {
+      flex: 1;
+      min-height: 40px;
+      padding: 10px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+    
+    .bulletin-textarea:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+    
+    .bulletin-submit {
+      padding: 10px 20px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    .bulletin-submit:hover {
+      background: #3367d6;
+    }
+    
+    .bulletin-submit:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .bulletin-empty {
+      text-align: center;
+      color: #999;
+      font-size: 13px;
+      padding: 20px;
+    }
+    
+    .bulletin-edit-area {
+      margin-top: 8px;
+    }
+    
+    .bulletin-edit-area .bulletin-textarea {
+      width: 100%;
+    }
+    
+    .bulletin-edit-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      justify-content: flex-end;
+    }
+    
+    .bulletin-edit-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .bulletin-edit-save {
+      background: #4285f4;
+      color: white;
+    }
+    
+    .bulletin-edit-save:hover {
+      background: #3367d6;
+    }
+    
+    .bulletin-edit-save:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .bulletin-edit-cancel {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .bulletin-edit-cancel:hover {
+      background: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <div class="date-picker">
+        <input type="date" id="startDate">
+        <span id="statusMessage" class="status-message hidden"></span>
+      </div>
+      <div class="header-center">
+        <button id="updateButton" class="update-button hidden" onclick="applyUpdate()">更新があります</button>
+      </div>
+      <a href="https://calendar.google.com" target="_blank" class="calendar-link">
+        Googleカレンダーを開く
+      </a>
+    </div>
+  </div>
+  
+  <div class="shift-container" id="shiftContainer">
+    <div class="loading">読み込み中...</div>
+  </div>
+
+  <script>
+    // 時間の範囲(9時〜18時)
+    const START_HOUR = 9;
+    const END_HOUR = 18;
+    const TOTAL_HOURS = END_HOUR - START_HOUR;
+    
+    // 現在表示中のデータ
+    let currentData = null;
+    // 最新のデータ(更新ボタン用)
+    let latestData = null;
+    // 更新チェックのインターバルID
+    let updateCheckInterval = null;
+    // ツールチップ要素
+    let tooltipEl = null;
+    
+    // 時刻文字列から時間の数値を計算
+    function timeToHour(timeStr) {
+      const [h, m] = timeStr.split(':').map(Number);
+      return h + m / 60;
+    }
+    
+    // ツールチップを表示
+    function showTooltip(event, eventData) {
+      if (!tooltipEl) {
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'tooltip';
+        document.body.appendChild(tooltipEl);
+      }
+      
+      tooltipEl.innerHTML = `
+        <div class="tooltip-title">${eventData.title}</div>
+        <div class="tooltip-time">${eventData.start} 〜 ${eventData.end}</div>
+      `;
+      tooltipEl.style.display = 'block';
+      
+      // 位置を設定(スクロール考慮)
+      const rect = event.target.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+      
+      tooltipEl.style.left = (rect.left + scrollLeft) + 'px';
+      tooltipEl.style.top = (rect.bottom + scrollTop + 8) + 'px';
+    }
+    
+    // ツールチップを非表示
+    function hideTooltip() {
+      if (tooltipEl) {
+        tooltipEl.style.display = 'none';
+      }
+    }
+    
+    // ポップアップを表示
+    function showPopup(eventData) {
+      const overlay = document.createElement('div');
+      overlay.className = 'popup-overlay';
+      overlay.onclick = function(e) {
+        if (e.target === overlay) {
+          overlay.remove();
+        }
+      };
+      
+      overlay.innerHTML = `
+        <div class="popup-card">
+          <div class="popup-header">
+            <div class="popup-title">${eventData.title}</div>
+            <div class="popup-time">${eventData.start} 〜 ${eventData.end}</div>
+          </div>
+          <div class="popup-footer">
+            <button class="popup-button popup-button-close" onclick="this.closest('.popup-overlay').remove()">閉じる</button>
+            ${eventData.htmlLink ? `<a href="${eventData.htmlLink}" target="_blank" class="popup-button popup-button-open">カレンダーで開く</a>` : ''}
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(overlay);
+    }
+    
+    // 掲示板の投稿データ
+    let postsData = [];
+    // 最新の投稿データ(更新ボタン用)
+    let latestPostsData = [];
+    
+    // 掲示板を読み込み(初回表示用)
+    function loadPosts() {
+      google.script.run
+        .withSuccessHandler(function(posts) {
+          postsData = posts;
+          latestPostsData = posts;
+          renderPosts();
+        })
+        .withFailureHandler(function(error) {
+          console.error('掲示板読み込みエラー:', error);
+          showStatus('掲示板の読み込みに失敗しました', 'error');
+          hideStatusAfterDelay(5000);
+        })
+        .getPosts();
+    }
+    
+    // 投稿データの差分チェック
+    function hasPostsChanged(oldPosts, newPosts) {
+      if (oldPosts.length !== newPosts.length) return true;
+      
+      for (let i = 0; i < oldPosts.length; i++) {
+        const o = oldPosts[i];
+        const n = newPosts[i];
+        if (o.id !== n.id || o.text !== n.text) {
+          return true;
+        }
+      }
+      return false;
+    }
+    
+    // 最新の投稿データを適用
+    function applyPostsUpdate() {
+      postsData = latestPostsData;
+      renderPosts();
+    }
+    
+    // 掲示板を描画
+    function renderPosts() {
+      const container = document.getElementById('bulletinPosts');
+      
+      if (postsData.length === 0) {
+        container.innerHTML = '<div class="bulletin-empty">投稿はありません</div>';
+        return;
+      }
+      
+      // ピン留め投稿と通常投稿を分ける
+      const pinnedPosts = postsData.filter(p => p.pinned);
+      const normalPosts = postsData.filter(p => !p.pinned);
+      
+      const renderPost = (post) => {
+        const date = new Date(post.timestamp);
+        const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        const editedStr = post.editedAt ? ' (編集済み)' : '';
+        const pinnedClass = post.pinned ? ' pinned' : '';
+        const pinButtonClass = post.pinned ? 'bulletin-pin-button pinned' : 'bulletin-pin-button';
+        
+        return `
+          <div class="bulletin-post${pinnedClass}" data-id="${post.id}">
+            <button class="${pinButtonClass}" onclick="togglePin('${post.id}')" title="${post.pinned ? 'ピン解除' : 'ピン留め'}">📌</button>
+            <div class="bulletin-post-text">${escapeHtml(post.text)}</div>
+            <div class="bulletin-post-meta">
+              <span>${dateStr}${editedStr}</span>
+              <div class="bulletin-post-actions">
+                <button class="bulletin-post-action" onclick="startEditPost('${post.id}')">編集</button>
+              </div>
+            </div>
+          </div>
+        `;
+      };
+      
+      let html = '';
+      
+      // ピン留め投稿があれば先に表示
+      if (pinnedPosts.length > 0) {
+        html += '<div class="bulletin-pinned-area">' + pinnedPosts.map(renderPost).join('') + '</div>';
+      }
+      
+      // 通常投稿を表示
+      html += normalPosts.map(renderPost).join('');
+      
+      container.innerHTML = html;
+      
+      // スクロールを最下部に移動（ピン留めエリアがある場合は通常投稿エリアの最下部）
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 0);
+    }
+    
+    // HTMLエスケープ
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 投稿を追加
+    function submitPost() {
+      const textarea = document.getElementById('bulletinInput');
+      const text = textarea.value.trim();
+      
+      if (!text) return;
+      
+      const submitBtn = document.querySelector('.bulletin-submit');
+      submitBtn.disabled = true;
+      
+      google.script.run
+        .withSuccessHandler(function(posts) {
+          postsData = posts;
+          latestPostsData = posts;
+          renderPosts();
+          textarea.value = '';
+          textarea.style.height = '40px';
+          submitBtn.disabled = false;
+        })
+        .withFailureHandler(function(error) {
+          console.error('投稿エラー:', error);
+          showStatus('投稿に失敗しました', 'error');
+          hideStatusAfterDelay(5000);
+          submitBtn.disabled = false;
+        })
+        .addPost(text);
+    }
+    
+    // ピン留めをトグル
+    function togglePin(id) {
+      const post = postsData.find(p => p.id === id);
+      if (!post) return;
+      
+      // 楽観的UI更新：即座に状態を変更して再描画
+      post.pinned = !post.pinned;
+      renderPosts();
+      
+      // 処理中状態にする
+      document.body.classList.add('processing');
+      const allPinButtons = document.querySelectorAll('.bulletin-pin-button');
+      allPinButtons.forEach(btn => btn.disabled = true);
+      
+      // 裏でサーバー更新
+      google.script.run
+        .withSuccessHandler(function(posts) {
+          postsData = posts;
+          latestPostsData = posts;
+          // すでに楽観的に更新済みなので、サーバーと同期が取れていれば再描画不要
+          // もし万が一ズレていたら再描画
+          const serverPost = posts.find(p => p.id === id);
+          if (serverPost && serverPost.pinned !== post.pinned) {
+            postsData = posts;
+            renderPosts();
+          }
+          // 処理中状態を解除
+          document.body.classList.remove('processing');
+          const allPinButtons = document.querySelectorAll('.bulletin-pin-button');
+          allPinButtons.forEach(btn => btn.disabled = false);
+        })
+        .withFailureHandler(function(error) {
+          console.error('ピン留めエラー:', error);
+          // エラー時は元に戻す
+          post.pinned = !post.pinned;
+          renderPosts();
+          showStatus('ピン留めに失敗しました', 'error');
+          hideStatusAfterDelay(5000);
+          // 処理中状態を解除
+          document.body.classList.remove('processing');
+          const allPinButtons = document.querySelectorAll('.bulletin-pin-button');
+          allPinButtons.forEach(btn => btn.disabled = false);
+        })
+        .togglePinPost(id);
+    }
+    
+    // 編集モードを開始
+    function startEditPost(id) {
+      const post = postsData.find(p => p.id === id);
+      if (!post) return;
+      
+      const postEl = document.querySelector(`.bulletin-post[data-id="${id}"]`);
+      const textEl = postEl.querySelector('.bulletin-post-text');
+      
+      textEl.innerHTML = `
+        <div class="bulletin-edit-area">
+          <textarea class="bulletin-textarea" id="editTextarea-${id}">${escapeHtml(post.text)}</textarea>
+          <div class="bulletin-edit-buttons">
+            <button class="bulletin-edit-btn bulletin-edit-cancel" onclick="renderPosts()">キャンセル</button>
+            <button class="bulletin-edit-btn bulletin-edit-save" onclick="saveEditPost('${id}')">保存</button>
+          </div>
+        </div>
+      `;
+      
+      const editTextarea = document.getElementById(`editTextarea-${id}`);
+      editTextarea.focus();
+      autoResizeTextarea(editTextarea);
+      editTextarea.addEventListener('input', function() {
+        autoResizeTextarea(this);
+      });
+      // Ctrl+Enterで保存
+      editTextarea.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+          e.preventDefault();
+          saveEditPost(id);
+        }
+      });
+      
+      // 編集エリアを中央にスクロール
+      editTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // 編集を保存(空なら削除)
+    function saveEditPost(id) {
+      const textarea = document.getElementById(`editTextarea-${id}`);
+      const text = textarea.value.trim();
+      
+      // 保存ボタンをグレーアウト
+      const saveBtn = textarea.parentElement.querySelector('.bulletin-edit-save');
+      if (saveBtn) saveBtn.disabled = true;
+      
+      if (!text) {
+        // 空なら削除
+        if (confirm('内容が空です。この投稿を削除しますか?')) {
+          google.script.run
+            .withSuccessHandler(function(posts) {
+              postsData = posts;
+              latestPostsData = posts;
+              renderPosts();
+            })
+            .withFailureHandler(function(error) {
+              console.error('削除エラー:', error);
+              showStatus('削除に失敗しました', 'error');
+              hideStatusAfterDelay(5000);
+              if (saveBtn) saveBtn.disabled = false;
+            })
+            .deletePost(id);
+        } else {
+          if (saveBtn) saveBtn.disabled = false;
+        }
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(posts) {
+          postsData = posts;
+          latestPostsData = posts;
+          renderPosts();
+        })
+        .withFailureHandler(function(error) {
+          console.error('編集エラー:', error);
+          showStatus('編集に失敗しました', 'error');
+          hideStatusAfterDelay(5000);
+          if (saveBtn) saveBtn.disabled = false;
+        })
+        .editPost(id, text);
+    }
+    
+    // テキストエリアの自動リサイズ
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+    
+    // ステータスメッセージを表示
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.className = 'status-message status-' + type;
+      statusEl.classList.remove('hidden');
+    }
+    
+    // ステータスメッセージを非表示
+    function hideStatus() {
+      document.getElementById('statusMessage').classList.add('hidden');
+    }
+    
+    // ステータスメッセージを一定時間後に非表示
+    function hideStatusAfterDelay(delay) {
+      setTimeout(hideStatus, delay);
+    }
+    
+    // 初期化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 今日の日付をセット(確実に日本時間で)
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      document.getElementById('startDate').value = dateStr;
+      
+      // 日付変更時に自動読み込み
+      document.getElementById('startDate').addEventListener('change', function() {
+        loadShiftData();
+      });
+      
+      // データ読み込み
+      loadShiftData();
+      
+      // 10分ごとに更新チェック
+      updateCheckInterval = setInterval(function() {
+        checkForUpdates(false);
+      }, 600000);
+    });
+    
+    // シフトデータ読み込み(キャッシュ優先)
+    function loadShiftData() {
+      const startDate = document.getElementById('startDate').value;
+      document.getElementById('shiftContainer').innerHTML = '<div class="loading">読み込み中...</div>';
+      document.getElementById('updateButton').classList.add('hidden');
+      
+      // まずキャッシュから取得を試みる
+      google.script.run
+        .withSuccessHandler(function(cachedData) {
+          if (cachedData) {
+            // キャッシュがあれば即座に表示
+            currentData = cachedData;
+            renderShift(cachedData);
+            loadPosts();
+            // ステータス表示して裏で最新データをチェック
+            showStatus('最新情報を確認中...', 'loading');
+            checkForUpdates(true);
+          } else {
+            // キャッシュがなければAPIから取得
+            showStatus('最新情報を読み込み中です', 'loading');
+            fetchFreshData(true);
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('キャッシュ取得エラー:', error);
+          // キャッシュ取得失敗時はAPIから取得
+          showStatus('最新情報を読み込み中です', 'loading');
+          fetchFreshData(true);
+        })
+        .getShiftDataFromCache(startDate);
+    }
+    
+    // APIから最新データを取得
+    function fetchFreshData(showStatusOnSuccess) {
+      const startDate = document.getElementById('startDate').value;
+      
+      google.script.run
+        .withSuccessHandler(function(data) {
+          currentData = data;
+          renderShift(data);
+          loadPosts();
+          if (showStatusOnSuccess) {
+            showStatus('最新です', 'success');
+            hideStatusAfterDelay(3000);
+          }
+        })
+        .withFailureHandler(function(error) {
+          console.error('データ取得エラー:', error);
+          handleError(error);
+        })
+        .getShiftDataFresh(startDate);
+    }
+    
+    // 更新チェック(統合版)
+    function checkForUpdates(showStatusMessage) {
+      const startDate = document.getElementById('startDate').value;
+      
+      let shiftHasChanges = false;
+      let postsHasChanges = false;
+      let checksCompleted = 0;
+      
+      const onCheckComplete = () => {
+        checksCompleted++;
+        if (checksCompleted === 2) {
+          if (shiftHasChanges || postsHasChanges) {
+            if (showStatusMessage) hideStatus();
+            document.getElementById('updateButton').classList.remove('hidden');
+          } else if (showStatusMessage) {
+            showStatus('最新です', 'success');
+            hideStatusAfterDelay(3000);
+          }
+        }
+      };
+      
+      // シフトデータのチェック
+      google.script.run
+        .withSuccessHandler(function(freshData) {
+          latestData = freshData;
+          if (currentData && hasDataChanged(currentData, freshData)) {
+            shiftHasChanges = true;
+          }
+          onCheckComplete();
+        })
+        .withFailureHandler(function(error) {
+          console.error('更新チェックエラー:', error);
+          if (showStatusMessage) {
+            showStatus('更新チェックに失敗しました', 'error');
+            hideStatusAfterDelay(5000);
+          }
+          onCheckComplete();
+        })
+        .getShiftDataFresh(startDate);
+      
+      // 投稿データのチェック
+      google.script.run
+        .withSuccessHandler(function(posts) {
+          latestPostsData = posts;
+          if (hasPostsChanged(postsData, posts)) {
+            postsHasChanges = true;
+          }
+          onCheckComplete();
+        })
+        .withFailureHandler(function(error) {
+          console.error('掲示板更新チェックエラー:', error);
+          if (showStatusMessage) {
+            showStatus('更新チェックに失敗しました', 'error');
+            hideStatusAfterDelay(5000);
+          }
+          onCheckComplete();
+        })
+        .getPosts();
+    }
+    
+    // データの差分チェック(IDベース)
+    function hasDataChanged(oldData, newData) {
+      // メンバー数が違う
+      if (oldData.members.length !== newData.members.length) return true;
+      
+      for (let i = 0; i < oldData.members.length; i++) {
+        const oldMember = oldData.members[i];
+        const newMember = newData.members[i];
+        
+        for (const dateStr of oldData.dates) {
+          const oldDayData = oldMember.events[dateStr] || { isOff: false, isYukyu: false, events: [] };
+          const newDayData = newMember.events[dateStr] || { isOff: false, isYukyu: false, events: [] };
+          
+          // 休みや有給の状態が違う
+          if (oldDayData.isOff !== newDayData.isOff || oldDayData.isYukyu !== newDayData.isYukyu) return true;
+          
+          const oldEvents = oldDayData.events || [];
+          const newEvents = newDayData.events || [];
+          
+          // 予定の数が違う
+          if (oldEvents.length !== newEvents.length) return true;
+          
+          // IDでマップを作成
+          const oldMap = {};
+          oldEvents.forEach(e => { oldMap[e.id] = e; });
+          
+          // 各予定を比較
+          for (const newEvent of newEvents) {
+            const oldEvent = oldMap[newEvent.id];
+            
+            // IDがなくなった(新規追加された)
+            if (!oldEvent) return true;
+            
+            // タイトル・時間が変わった
+            if (oldEvent.title !== newEvent.title ||
+                oldEvent.start !== newEvent.start ||
+                oldEvent.end !== newEvent.end ||
+                oldEvent.myResponseStatus !== newEvent.myResponseStatus) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+    
+    // 更新を適用
+    function applyUpdate() {
+      if (latestData) {
+        currentData = latestData;
+        renderShift(latestData);
+      }
+      if (latestPostsData) {
+        postsData = latestPostsData;
+        renderPosts();
+      }
+      document.getElementById('updateButton').classList.add('hidden');
+    }
+    
+    // エラーハンドリング
+    function handleError(error) {
+      document.getElementById('shiftContainer').innerHTML = 
+        '<div class="loading">エラーが発生しました: ' + error.message + '</div>';
+      showStatus('データの読み込みに失敗しました', 'error');
+      hideStatusAfterDelay(5000);
+    }
+    
+    // シフト表を描画
+    function renderShift(data) {
+      const container = document.getElementById('shiftContainer');
+      container.innerHTML = '';
+      
+      data.dates.forEach((dateStr, index) => {
+        const daySection = document.createElement('div');
+        daySection.className = 'day-section';
+        
+        const isHoliday = data.holidays[dateStr];
+        const date = new Date(dateStr);
+        const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        const displayDate = `${date.getMonth() + 1}/${date.getDate()}(${dayNames[date.getDay()]})`;
+        
+        // 日付ヘッダー
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'day-header' + (isHoliday ? ' holiday' : '');
+        dayHeader.innerHTML = `<span>${displayDate}</span>` + 
+          (isHoliday ? `<span>${isHoliday}</span>` : '');
+        daySection.appendChild(dayHeader);
+        
+        // 時間ヘッダー
+        const timeHeader = document.createElement('div');
+        timeHeader.className = 'time-header';
+        timeHeader.innerHTML = '<div class="name-column"></div><div class="time-slots">' +
+          Array.from({length: TOTAL_HOURS}, (_, i) => 
+            `<div class="time-slot">${START_HOUR + i}</div>`
+          ).join('') + '</div>';
+        daySection.appendChild(timeHeader);
+        
+        // メンバー行のコンテナ
+        const membersContainer = document.createElement('div');
+        membersContainer.style.position = 'relative';
+        
+        // 各メンバーの行
+        data.members.forEach(member => {
+          const memberRow = document.createElement('div');
+          memberRow.className = 'member-row';
+          
+          const memberEvents = member.events[dateStr] || { isOff: false, isYukyu: false, events: [] };
+          
+          // 名前列
+          const nameCol = document.createElement('div');
+          nameCol.className = 'member-name';
+          nameCol.textContent = member.name;
+          memberRow.appendChild(nameCol);
+          
+          // スケジュール列
+          const scheduleCol = document.createElement('div');
+          scheduleCol.className = 'member-schedule';
+          
+          // バーコンテナを作成(余白を持たせるため)
+          const barContainer = document.createElement('div');
+          barContainer.className = 'bar-container';
+          
+          if (!isHoliday) {
+            if (memberEvents.isYukyu) {
+              // 有給の場合は有給バーのみ表示
+              renderEvents(barContainer, memberEvents.events, true);
+            } else if (!memberEvents.isOff) {
+              // デフォルトバー(9-18時の出勤)
+              const defaultBar = document.createElement('div');
+              defaultBar.className = 'bar bar-default';
+              defaultBar.style.left = '0%';
+              defaultBar.style.width = '100%';
+              barContainer.appendChild(defaultBar);
+              
+              // 予定バーを重ねる
+              if (memberEvents.events && memberEvents.events.length > 0) {
+                renderEvents(barContainer, memberEvents.events, false);
+              }
+            }
+          }
+          
+          scheduleCol.appendChild(barContainer);
+          
+          memberRow.appendChild(scheduleCol);
+          membersContainer.appendChild(memberRow);
+        });
+        
+        // 祝日オーバーレイ
+        if (isHoliday) {
+          const overlay = document.createElement('div');
+          overlay.className = 'holiday-overlay';
+          overlay.textContent = isHoliday;
+          overlay.style.height = (data.members.length * 50) + 'px';
+          membersContainer.style.position = 'relative';
+          membersContainer.appendChild(overlay);
+        }
+        
+        daySection.appendChild(membersContainer);
+        container.appendChild(daySection);
+        
+        // 1日目の後に掲示板を挿入
+        if (index === 0) {
+          const bulletinBoard = document.createElement('div');
+          bulletinBoard.className = 'bulletin-board';
+          bulletinBoard.innerHTML = `
+            <div class="bulletin-header">今日のひとこと</div>
+            <div class="bulletin-content">
+              <div class="bulletin-posts" id="bulletinPosts">
+                <div class="bulletin-empty">読み込み中...</div>
+              </div>
+              <div class="bulletin-input-area">
+                <textarea class="bulletin-textarea" id="bulletinInput" placeholder="メッセージを入力..."></textarea>
+                <button class="bulletin-submit" onclick="submitPost()">投稿</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(bulletinBoard);
+          
+          // テキストエリアのイベントリスナーを設定
+          const bulletinInput = document.getElementById('bulletinInput');
+          if (bulletinInput) {
+            bulletinInput.addEventListener('input', function() {
+              autoResizeTextarea(this);
+            });
+            // Ctrl+Enterで投稿
+            bulletinInput.addEventListener('keydown', function(e) {
+              if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                submitPost();
+              }
+            });
+          }
+        }
+      });
+    }
+    
+    // 2つのイベントが時間的に重なっているかチェック
+    function eventsOverlap(event1, event2) {
+      const start1 = Math.max(timeToHour(event1.start), START_HOUR);
+      const end1 = Math.min(timeToHour(event1.end), END_HOUR);
+      const start2 = Math.max(timeToHour(event2.start), START_HOUR);
+      const end2 = Math.min(timeToHour(event2.end), END_HOUR);
+      return start1 < end2 && end1 > start2;
+    }
+    
+    // イベント1がイベント2より早いかチェック
+    function isEarlierEvent(event1, event2, allEvents) {
+      const start1 = timeToHour(event1.start);
+      const start2 = timeToHour(event2.start);
+      
+      if (start1 < start2) return true;
+      if (start1 > start2) return false;
+      
+      // 開始時間が同じ場合は配列での順番で判定
+      return allEvents.indexOf(event1) < allEvents.indexOf(event2);
+    }
+    
+    // イベントの表示位置を取得(0=上、1=下、2以上=非表示)
+    function getEventPosition(event, allEvents) {
+      // この予定と重なる他の予定を取得
+      const overlapping = allEvents.filter(other => 
+        other !== event && eventsOverlap(event, other)
+      );
+      
+      if (overlapping.length === 0) return 0;
+      
+      // この予定より早い予定の数をカウント
+      const earlierEvents = overlapping.filter(other => 
+        isEarlierEvent(other, event, allEvents)
+      );
+      
+      return earlierEvents.length;
+    }
+    
+    // 予定バーを描画
+    function renderEvents(container, events, isYukyuMode = false) {
+      // 不参加の予定を除外
+      const visibleEvents = events.filter(e => e.myResponseStatus !== 'declined');
+      
+      // 全予定を開始時間でソート
+      const sortedEvents = [...visibleEvents].sort((a, b) => {
+        const aHour = timeToHour(a.start);
+        const bHour = timeToHour(b.start);
+        return aHour - bHour;
+      });
+      
+      sortedEvents.forEach((event) => {
+        const startHour = timeToHour(event.start);
+        const endHour = timeToHour(event.end);
+        
+        // 9-18時の範囲内に収める
+        const clampedStart = Math.max(startHour, START_HOUR);
+        const clampedEnd = Math.min(endHour, END_HOUR);
+        
+        if (clampedStart >= clampedEnd) return;
+        
+        // この予定の表示位置を取得
+        const position = getEventPosition(event, sortedEvents);
+        
+        // 3件以上の重複で3番目以降は表示しない
+        if (position >= 2) return;
+        
+        const left = ((clampedStart - START_HOUR) / TOTAL_HOURS) * 100;
+        const width = ((clampedEnd - clampedStart) / TOTAL_HOURS) * 100;
+        
+        const bar = createEventBar(event, left, width, isYukyuMode);
+        
+        // 重複がある場合は上下に分割
+        const hasOverlap = sortedEvents.some(other => 
+          other !== event && eventsOverlap(event, other)
+        );
+        
+        if (hasOverlap) {
+          bar.style.height = 'calc(50% - 1px)';
+          bar.style.top = position === 0 ? '0' : 'calc(50% + 1px)';
+        }
+        
+        container.appendChild(bar);
+      });
+    }
+    
+    // イベントバーを作成
+    function createEventBar(event, left, width, isYukyuMode = false) {
+      const bar = document.createElement('div');
+      
+      let barClass = 'bar ';
+      if (isYukyuMode || event.title.includes('有給')) {
+        barClass += 'bar-yukyu';
+      } else if (event.title.includes('休憩')) {
+        barClass += 'bar-rest';
+      } else {
+        barClass += 'bar-event';
+      }
+      
+      bar.className = barClass;
+      bar.style.left = left + '%';
+      bar.style.width = width + '%';
+      bar.innerHTML = `<div class="bar-content">${event.title}</div>`;
+      
+      // ツールチップ
+      bar.addEventListener('mouseenter', function(e) {
+        showTooltip(e, event);
+      });
+      bar.addEventListener('mouseleave', function() {
+        hideTooltip();
+      });
+      
+      // ポップアップ
+      bar.addEventListener('click', function() {
+        hideTooltip();
+        showPopup(event);
+      });
+      
+      return bar;
+    }
+  </script>
+</body>
+</html>
