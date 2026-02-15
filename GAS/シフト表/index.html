@@ -61,6 +61,29 @@
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
     
+    .slack-button {
+      padding: 12px 20px;
+      background: #4A154B;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    }
+    
+    .slack-button:hover {
+      background: #611f69;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .slack-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
     .date-picker input {
       padding: 12px 16px;
       border: none;
@@ -75,25 +98,6 @@
       outline: none;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
       transform: translateY(-1px);
-    }
-    
-    .date-picker button {
-      padding: 12px 24px;
-      background: #4285f4;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: all 0.2s ease;
-    }
-    
-    .date-picker button:hover {
-      background: #3367d6;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
     }
     
     .update-button {
@@ -345,20 +349,13 @@
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     
-    .bar-split {
-      width: calc(50% - 1px);
-    }
-    
-    .bar-split.left {
-      left: 0;
-    }
-    
-    .bar-split.right {
-      left: calc(50% + 1px);
-    }
-    
     .bar-alert {
-      background: #8e7cc3;
+      background: #e53935;
+    }
+    
+    .bar-alert .bar-content {
+      color: white;
+      font-weight: 600;
     }
     
     .holiday-overlay {
@@ -384,14 +381,6 @@
       font-size: 14px;
     }
     
-    .off-day {
-      background: #fafafa;
-    }
-    
-    .off-day .bar-container {
-      display: none;
-    }
-    
     /* ツールチップ */
     .bar {
       cursor: pointer;
@@ -412,6 +401,14 @@
     
     .tooltip-title {
       font-weight: 600;
+    }
+    
+    .tooltip-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #555;
     }
     
     .tooltip-time {
@@ -743,9 +740,12 @@
       <div class="header-center">
         <button id="updateButton" class="update-button hidden" onclick="applyUpdate()">更新があります</button>
       </div>
-      <a href="https://calendar.google.com" target="_blank" class="calendar-link">
-        Googleカレンダーを開く
-      </a>
+      <div style="display: flex; gap: 12px;">
+        <button class="slack-button" onclick="sendSlackNotify()">Slackへ更新通知</button>
+        <a href="https://calendar.google.com" target="_blank" class="calendar-link">
+          Googleカレンダーを開く
+        </a>
+      </div>
     </div>
   </div>
   
@@ -775,15 +775,18 @@
     }
     
     // ツールチップを表示
-    function showTooltip(event, eventData) {
+    function showTooltip(event, eventData, memberName = '') {
       if (!tooltipEl) {
         tooltipEl = document.createElement('div');
         tooltipEl.className = 'tooltip';
         document.body.appendChild(tooltipEl);
       }
       
+      const titleHtml = eventData.title.replace(/\n/g, '<br>');
+      const nameHtml = memberName ? `<div class="tooltip-name">${memberName}</div>` : '';
       tooltipEl.innerHTML = `
-        <div class="tooltip-title">${eventData.title}</div>
+        ${nameHtml}
+        <div class="tooltip-title">${titleHtml}</div>
         <div class="tooltip-time">${eventData.start} 〜 ${eventData.end}</div>
       `;
       tooltipEl.style.display = 'block';
@@ -814,10 +817,11 @@
         }
       };
       
+      const titleHtml = eventData.title.replace(/\n/g, '<br>');
       overlay.innerHTML = `
         <div class="popup-card">
           <div class="popup-header">
-            <div class="popup-title">${eventData.title}</div>
+            <div class="popup-title">${titleHtml}</div>
             <div class="popup-time">${eventData.start} 〜 ${eventData.end}</div>
           </div>
           <div class="popup-footer">
@@ -863,12 +867,6 @@
         }
       }
       return false;
-    }
-    
-    // 最新の投稿データを適用
-    function applyPostsUpdate() {
-      postsData = latestPostsData;
-      renderPosts();
     }
     
     // 掲示板を描画
@@ -1372,7 +1370,7 @@
           if (!isHoliday) {
             if (memberEvents.isYukyu) {
               // 有給の場合は有給バーのみ表示
-              renderEvents(barContainer, memberEvents.events, true);
+              renderEvents(barContainer, memberEvents.events, true, member.name);
             } else if (!memberEvents.isOff) {
               // デフォルトバー(9-18時の出勤)
               const defaultBar = document.createElement('div');
@@ -1383,7 +1381,7 @@
               
               // 予定バーを重ねる
               if (memberEvents.events && memberEvents.events.length > 0) {
-                renderEvents(barContainer, memberEvents.events, false);
+                renderEvents(barContainer, memberEvents.events, false, member.name);
               }
             }
           }
@@ -1443,124 +1441,170 @@
       });
     }
     
-    // 2つのイベントが時間的に重なっているかチェック
-    function eventsOverlap(event1, event2) {
-      const start1 = Math.max(timeToHour(event1.start), START_HOUR);
-      const end1 = Math.min(timeToHour(event1.end), END_HOUR);
-      const start2 = Math.max(timeToHour(event2.start), START_HOUR);
-      const end2 = Math.min(timeToHour(event2.end), END_HOUR);
-      return start1 < end2 && end1 > start2;
+    // Slack通知を送信
+    function sendSlackNotify() {
+      if (!confirm('Slackに更新通知を送信しますか？')) return;
+      
+      const btn = document.querySelector('.slack-button');
+      btn.disabled = true;
+      btn.textContent = '送信中...';
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          showStatus('Slackに通知しました', 'success');
+          hideStatusAfterDelay(3000);
+          btn.disabled = false;
+          btn.textContent = 'Slackへ更新通知';
+        })
+        .withFailureHandler(function(error) {
+          console.error('Slack通知エラー:', error);
+          showStatus('Slack通知に失敗しました', 'error');
+          hideStatusAfterDelay(5000);
+          btn.disabled = false;
+          btn.textContent = 'Slackへ更新通知';
+        })
+        .sendSlackNotification();
     }
     
-    // イベント1がイベント2より早いかチェック
-    function isEarlierEvent(event1, event2, allEvents) {
-      const start1 = timeToHour(event1.start);
-      const start2 = timeToHour(event2.start);
-      
-      if (start1 < start2) return true;
-      if (start1 > start2) return false;
-      
-      // 開始時間が同じ場合は配列での順番で判定
-      return allEvents.indexOf(event1) < allEvents.indexOf(event2);
+    // 特定の時刻に重なっている予定を取得
+    function getEventsAt(time, events) {
+      return events.filter(e => {
+        const start = Math.max(timeToHour(e.start), START_HOUR);
+        const end = Math.min(timeToHour(e.end), END_HOUR);
+        return start <= time && time < end;
+      });
     }
     
-    // イベントの表示位置を取得(0=上、1=下、2以上=非表示)
-    function getEventPosition(event, allEvents) {
-      // この予定と重なる他の予定を取得
-      const overlapping = allEvents.filter(other => 
-        other !== event && eventsOverlap(event, other)
-      );
-      
-      if (overlapping.length === 0) return 0;
-      
-      // この予定より早い予定の数をカウント
-      const earlierEvents = overlapping.filter(other => 
-        isEarlierEvent(other, event, allEvents)
-      );
-      
-      return earlierEvents.length;
+    // 全イベントから時間区間を取得
+    function getTimeSegments(events) {
+      const timePoints = new Set();
+      events.forEach(e => {
+        const start = Math.max(timeToHour(e.start), START_HOUR);
+        const end = Math.min(timeToHour(e.end), END_HOUR);
+        if (start < end) {
+          timePoints.add(start);
+          timePoints.add(end);
+        }
+      });
+      return [...timePoints].sort((a, b) => a - b);
     }
     
     // 予定バーを描画
-    function renderEvents(container, events, isYukyuMode = false) {
+    function renderEvents(container, events, isYukyuMode = false, memberName = '') {
       // 不参加の予定を除外
       const visibleEvents = events.filter(e => e.myResponseStatus !== 'declined');
       
-      // 全予定を開始時間でソート
+      if (visibleEvents.length === 0) return;
+      
+      // 時間区間を取得
+      const timePoints = getTimeSegments(visibleEvents);
+      
+      // 開始時間順にソート（一度だけ）
       const sortedEvents = [...visibleEvents].sort((a, b) => {
-        const aHour = timeToHour(a.start);
-        const bHour = timeToHour(b.start);
-        return aHour - bHour;
+        const aStart = timeToHour(a.start);
+        const bStart = timeToHour(b.start);
+        if (aStart !== bStart) return aStart - bStart;
+        return visibleEvents.indexOf(a) - visibleEvents.indexOf(b);
       });
       
-      sortedEvents.forEach((event) => {
-        const startHour = timeToHour(event.start);
-        const endHour = timeToHour(event.end);
-        
-        // 9-18時の範囲内に収める
-        const clampedStart = Math.max(startHour, START_HOUR);
-        const clampedEnd = Math.min(endHour, END_HOUR);
-        
-        if (clampedStart >= clampedEnd) return;
-        
-        // この予定の表示位置を取得
-        const position = getEventPosition(event, sortedEvents);
-        
-        // 3件以上の重複で3番目以降は表示しない
-        if (position >= 2) return;
-        
-        const left = ((clampedStart - START_HOUR) / TOTAL_HOURS) * 100;
-        const width = ((clampedEnd - clampedStart) / TOTAL_HOURS) * 100;
-        
-        const bar = createEventBar(event, left, width, isYukyuMode);
-        
-        // 重複がある場合は上下に分割
-        const hasOverlap = sortedEvents.some(other => 
-          other !== event && eventsOverlap(event, other)
-        );
-        
-        if (hasOverlap) {
-          bar.style.height = 'calc(50% - 1px)';
-          bar.style.top = position === 0 ? '0' : 'calc(50% + 1px)';
-        }
-        
-        container.appendChild(bar);
-      });
-    }
-    
-    // イベントバーを作成
-    function createEventBar(event, left, width, isYukyuMode = false) {
-      const bar = document.createElement('div');
-      
-      let barClass = 'bar ';
-      if (isYukyuMode || event.title.includes('有給')) {
-        barClass += 'bar-yukyu';
-      } else if (event.title.includes('休憩')) {
-        barClass += 'bar-rest';
-      } else {
-        barClass += 'bar-event';
+      // バーにツールチップとポップアップを設定する共通関数
+      function attachBarEvents(bar, data, name = '') {
+        bar.addEventListener('mouseenter', e => showTooltip(e, data, name));
+        bar.addEventListener('mouseleave', hideTooltip);
+        bar.addEventListener('click', () => {
+          hideTooltip();
+          showPopup(data);
+        });
       }
       
-      bar.className = barClass;
-      bar.style.left = left + '%';
-      bar.style.width = width + '%';
-      bar.innerHTML = `<div class="bar-content">${event.title}</div>`;
+      // バーのクラスを決定する関数
+      function getBarClass(event, isYukyu) {
+        if (isYukyu || event.title.includes('有給')) return 'bar bar-yukyu';
+        if (event.title.includes('休憩')) return 'bar bar-rest';
+        return 'bar bar-event';
+      }
       
-      // ツールチップ
-      bar.addEventListener('mouseenter', function(e) {
-        showTooltip(e, event);
-      });
-      bar.addEventListener('mouseleave', function() {
-        hideTooltip();
+      // 各予定について、描画する区間を計算
+      sortedEvents.forEach(event => {
+        const eventStart = Math.max(timeToHour(event.start), START_HOUR);
+        const eventEnd = Math.min(timeToHour(event.end), END_HOUR);
+        
+        if (eventStart >= eventEnd) return;
+        
+        // この予定が存在する各区間を処理
+        for (let i = 0; i < timePoints.length - 1; i++) {
+          const segStart = timePoints[i];
+          const segEnd = timePoints[i + 1];
+          
+          // この予定がこの区間に存在するか
+          if (segStart >= eventEnd || segEnd <= eventStart) continue;
+          
+          const midpoint = (segStart + segEnd) / 2;
+          const eventsInSegment = getEventsAt(midpoint, sortedEvents);
+          const overlapCount = eventsInSegment.length;
+          
+          // 3件以上重複している区間はスキップ（アラートバーで表示）
+          if (overlapCount >= 3) continue;
+          
+          // この区間でのこの予定の位置を決定（既にソート済み）
+          const position = eventsInSegment.indexOf(event);
+          if (position >= 2) continue;
+          
+          const left = ((segStart - START_HOUR) / TOTAL_HOURS) * 100;
+          const width = ((segEnd - segStart) / TOTAL_HOURS) * 100;
+          
+          const bar = document.createElement('div');
+          bar.className = getBarClass(event, isYukyuMode);
+          bar.style.left = left + '%';
+          bar.style.width = width + '%';
+          bar.innerHTML = `<div class="bar-content">${event.title}</div>`;
+          
+          // 2件重複している場合は上下に分割
+          if (overlapCount === 2) {
+            bar.style.height = 'calc(50% - 1px)';
+            bar.style.top = position === 0 ? '0' : 'calc(50% + 1px)';
+          }
+          
+          attachBarEvents(bar, event, memberName);
+          container.appendChild(bar);
+        }
       });
       
-      // ポップアップ
-      bar.addEventListener('click', function() {
-        hideTooltip();
-        showPopup(event);
-      });
-      
-      return bar;
+      // 3件以上重複している時間帯にアラートバーを表示
+      for (let i = 0; i < timePoints.length - 1; i++) {
+        const segStart = timePoints[i];
+        const segEnd = timePoints[i + 1];
+        const midpoint = (segStart + segEnd) / 2;
+        
+        if (getEventsAt(midpoint, visibleEvents).length >= 3) {
+          const left = ((segStart - START_HOUR) / TOTAL_HOURS) * 100;
+          const width = ((segEnd - segStart) / TOTAL_HOURS) * 100;
+          
+          const alertBar = document.createElement('div');
+          alertBar.className = 'bar bar-alert';
+          alertBar.style.left = left + '%';
+          alertBar.style.width = width + '%';
+          alertBar.style.zIndex = '3';
+          alertBar.innerHTML = '<div class="bar-content">予定が重複しています</div>';
+          
+          const alertData = {
+            title: '予定が重複しています。\nGoogleカレンダーで確認してください',
+            start: formatHour(segStart),
+            end: formatHour(segEnd),
+            htmlLink: 'https://calendar.google.com'
+          };
+          
+          attachBarEvents(alertBar, alertData, memberName);
+          container.appendChild(alertBar);
+        }
+      }
+    }
+    
+    // 時間を HH:MM 形式にフォーマット
+    function formatHour(hour) {
+      const h = Math.floor(hour);
+      const m = Math.round((hour - h) * 60);
+      return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
     }
   </script>
 </body>
