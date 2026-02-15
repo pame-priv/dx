@@ -57,6 +57,7 @@
 
 
 ---
+
 # シフト表Webアプリ（Google Apps Script）
 ## 解決した課題
 | Before | After |
@@ -74,5 +75,5 @@
 - キャッシュ機能で高速表示、バックグラウンドで最新データをチェック
 - 予定指示・確認の時間を1日あたり **5分/人** ほど短縮
 - 
-<img width="600" alt="シフト表" src="https://github.com/user-attachments/assets/9beb059c-b8d0-4564-82de-b39db4f0b9f6" />
+<img width="1000" alt="シフト表" src="https://github.com/user-attachments/assets/9beb059c-b8d0-4564-82de-b39db4f0b9f6" />
 
