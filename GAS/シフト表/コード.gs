@@ -30,13 +30,6 @@ function getMemberList() {
 }
 
 /**
- * メンバーリストのキャッシュをクリア
- */
-function clearMemberCache() {
-  CacheService.getScriptCache().remove('memberList');
-}
-
-/**
  * キャッシュからシフトデータを取得(高速)
  * @param {string} startDateStr - 開始日 (YYYY-MM-DD形式)
  * @return {Object|null} キャッシュされたシフトデータ、なければnull
@@ -319,7 +312,10 @@ function getPosts() {
   const props = PropertiesService.getScriptProperties();
   const data = JSON.parse(props.getProperty('postsData') || '{}');
   
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(now.getTime() + jstOffset);
+  const today = jstDate.toISOString().split('T')[0];
   
   // 日付が違ったらリセット
   if (data.date !== today) {
@@ -342,7 +338,10 @@ function addPost(text) {
   const props = PropertiesService.getScriptProperties();
   const data = JSON.parse(props.getProperty('postsData') || '{}');
   
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(now.getTime() + jstOffset);
+  const today = jstDate.toISOString().split('T')[0];
   
   // 日付が違ったらリセット
   let posts = [];
@@ -374,7 +373,10 @@ function editPost(id, text) {
   const props = PropertiesService.getScriptProperties();
   const data = JSON.parse(props.getProperty('postsData') || '{}');
   
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(now.getTime() + jstOffset);
+  const today = jstDate.toISOString().split('T')[0];
   
   // 日付が違ったらリセット
   if (data.date !== today) {
@@ -409,7 +411,10 @@ function deletePost(id) {
   const props = PropertiesService.getScriptProperties();
   const data = JSON.parse(props.getProperty('postsData') || '{}');
   
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(now.getTime() + jstOffset);
+  const today = jstDate.toISOString().split('T')[0];
   
   // 日付が違ったらリセット
   if (data.date !== today) {
@@ -440,7 +445,10 @@ function togglePinPost(id) {
   const props = PropertiesService.getScriptProperties();
   const data = JSON.parse(props.getProperty('postsData') || '{}');
   
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const jstOffset = 9 * 60 * 60 * 1000;
+  const jstDate = new Date(now.getTime() + jstOffset);
+  const today = jstDate.toISOString().split('T')[0];
   
   // 日付が違ったらリセット
   if (data.date !== today) {
@@ -480,6 +488,45 @@ function debugEventData() {
     Logger.log('予定: ' + e.summary);
     Logger.log('参加者: ' + JSON.stringify(e.attendees));
   });
+}
+
+/**
+ * Slackに更新通知を送信
+ * @return {Object} 結果
+ */
+function sendSlackNotification() {
+  const props = PropertiesService.getScriptProperties();
+  const token = props.getProperty('SLACK_TOKEN');
+  const channel = props.getProperty('SLACK_CHANNEL');
+  const groupId = props.getProperty('SLACK_GROUP_ID');
+  const deployUrl = props.getProperty('DEPLOY_URL');
+  
+  if (!token || !channel || !groupId || !deployUrl) {
+    throw new Error('Slack設定が不足しています');
+  }
+  
+  const message = `<!subteam^${groupId}>\nシフト表を更新しました。確認してください。\n${deployUrl}`;
+  
+  const options = {
+    method: 'post',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    payload: JSON.stringify({
+      channel: channel,
+      text: message
+    })
+  };
+  
+  const response = UrlFetchApp.fetch('https://slack.com/api/chat.postMessage', options);
+  const result = JSON.parse(response.getContentText());
+  
+  if (!result.ok) {
+    throw new Error('Slack送信エラー: ' + result.error);
+  }
+  
+  return { success: true };
 }
 
 
