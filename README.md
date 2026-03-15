@@ -35,6 +35,7 @@
 - 前述のナレッジベースに同じスタイルを適用させたため、そのまま社内ナレッジとしても利用可能
 
 <img width="600" alt="ナレッジエディター" src="https://github.com/user-attachments/assets/26b597d1-e0ba-41f1-a319-506af6e5dc71" />
+<img width="600" alt="エディターコード" src="https://github.com/user-attachments/assets/471bb4b0-db97-417d-80e0-dc69c9884610" />
 
 ---
 
