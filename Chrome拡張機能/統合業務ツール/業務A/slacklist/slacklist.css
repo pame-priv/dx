@@ -1,0 +1,105 @@
+body {
+    margin: 0;
+    padding: 0;
+    min-width: 250px;
+}
+
+/* container-groupの上部余白を削除（サイドパネル用） */
+.container-group {
+    padding: 12px;
+}
+
+/* フォームグループの調整 */
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+/* 入力フィールド */
+.form-group input[type="text"],
+.form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.form-group select {
+    background-color: white;
+    cursor: pointer;
+}
+
+/* URL表示欄（読み取り専用） */
+#sl-url-display {
+    background-color: #eee !important;
+    color: #555;
+    font-size: 12px;
+    margin-top: 8px;
+    cursor: default;
+}
+
+/* ボタン共通スタイル */
+.step-container button {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #007a5a;
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.step-container button:hover {
+    background-color: #005c44;
+}
+
+.step-container button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* URL読み込みボタン */
+#sl-fetch-url-btn {
+    margin-bottom: 0;
+}
+
+/* Slackリスト追加ボタン（メインアクション） */
+#sl-add-to-slack-btn {
+    margin-top: 16px;
+    background-color: #0d47a1;
+}
+
+#sl-add-to-slack-btn:hover {
+    background-color: #09316d;
+}
+
+#sl-add-to-slack-btn:disabled {
+    background-color: #ccc;
+}
+
+/* ステータスメッセージ */
+#sl-status-message {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #333;
+    padding: 8px;
+    border-radius: 4px;
+    min-height: 20px;
+    white-space: pre-line;
+}
+
+#sl-status-message:empty {
+    display: none;
+}

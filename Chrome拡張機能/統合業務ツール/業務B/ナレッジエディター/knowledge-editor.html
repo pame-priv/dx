@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ナレッジエディター</title>
+    <link rel="stylesheet" href="../../common/common.css">
+    <link rel="stylesheet" href="../../common/image-modal/image-modal.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="page-content">
+        <div class="page-title-row">
+            <h1>ナレッジエディター</h1>
+            <div class="title-links">
+                <a href="https://example.com" class="header-link-button" target="_blank" rel="noopener noreferrer">ナレッジ作成AI</a>
+                <a href="https://docs.google.com/spreadsheets/d/1S4P8DNTWtrLoOUBYcTcystnyKDCsUkk45daQonHeH4g" class="header-link-button" target="_blank" rel="noopener noreferrer">データベース</a>
+            </div>
+        </div>
+        <div class="editor-actions">
+            <button id="undoButton" class="history-button" disabled title="元に戻す (Ctrl+Z)">&#8634;</button>
+            <button id="redoButton" class="history-button" disabled title="やり直し (Ctrl+Y)">&#8635;</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="preview-section">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>コンテンツ</h3>
+                    <div class="view-toggle">
+                        <button class="toggle-button active" data-view="preview">プレビュー</button>
+                        <button class="toggle-button" data-view="code">コード</button>
+                    </div>
+                    <div class="header-actions">
+                        <button id="importButton" class="import-button">インポート</button>
+                        <button id="copyButton" class="copy-button">コピー</button>
+                    </div>
+                </div>
+                <div class="content-controls">
+                    <button class="content-button" data-type="title">タイトル</button>
+                    <button class="content-button" data-type="heading">大見出し</button>
+                    <button class="content-button" data-type="subheading">小見出し</button>
+                    <button class="content-button" data-type="miniheading">ミニ見出し</button>
+                    <button class="content-button" data-type="text">テキスト</button>
+                    <button class="content-button" data-type="highlight">ハイライト</button>
+                    <button class="content-button" data-type="description">説明テキスト</button>
+                    <button class="content-button" data-type="list">リスト</button>
+                    <button class="content-button" data-type="image">画像</button>
+                    <button class="content-button" data-type="steps">ステップカード</button>
+                    <button class="content-button" data-type="space">空行</button>
+                    <button class="content-button" data-type="divider">区切り線</button>
+                </div>
+                <div id="content-preview" class="preview-area active">
+                </div>
+                <div id="content-code-area" class="code-area hidden">
+                    <pre><code>ここにHTMLコードが表示されます</code></pre>
+                </div>
+            </div>
+            <div class="customize-area">
+                <div class="input-group" data-for="text" style="display: none;">
+                    <label>テキスト：</label>
+                    <input type="text" id="textInput" value="">
+                </div>
+                <div class="input-group" data-for="longtext" style="display: none;">
+                    <label>テキスト内容：</label>
+                    <textarea id="longText" rows="4"></textarea>
+                </div>
+                <div class="input-group" data-for="richtext" style="display: none;">
+                    <div class="richtext-header">
+                        <label>テキスト内容：</label>
+                        <div class="inline-toolbar">
+                            <button id="boldFormatBtn" class="format-button" title="太字 (Ctrl+B)"><strong>B</strong></button>
+                            <button id="linkFormatBtn" class="format-button" title="リンク">&#128279;</button>
+                        </div>
+                    </div>
+                    <div id="richTextEditor" contenteditable="true" class="richtext-editor"></div>
+                </div>
+                <div class="input-group" data-for="image" style="display: none;">
+                    <label>Google Drive URL またはファイルID：</label>
+                    <input type="text" id="imageFileId" placeholder="URLまたはファイルIDを入力">
+                    <label style="margin-top:4px;">alt説明：</label>
+                    <input type="text" id="imageAlt" placeholder="画像の説明">
+                    <div class="image-size-controls" id="imageSizeControls" style="display:none;">
+                        <label>サイズ：</label>
+                        <button id="imageDecrease" class="size-button">-</button>
+                        <input type="number" id="imageWidthInput" class="image-width-input" min="50" step="50">
+                        <span class="image-size-unit">px</span>
+                        <button id="imageIncrease" class="size-button">+</button>
+                        <span id="imageHeightDisplay" class="image-height-display"></span>
+                    </div>
+                </div>
+                <div class="input-group" data-for="list-type" style="display: none;">
+                    <label>リスト種類：</label>
+                    <div class="list-type-controls">
+                        <button id="listTypeUl" class="list-type-button active">箇条書き (ul)</button>
+                        <button id="listTypeOl" class="list-type-button">番号付き (ol)</button>
+                    </div>
+                </div>
+                <div class="input-group" data-for="steps" style="display: none;">
+                    <label>ステップ数：</label>
+                    <div class="steps-controls">
+                        <button id="decreaseSteps" class="size-button">-</button>
+                        <span id="stepsDisplay">3</span>
+                        <button id="increaseSteps" class="size-button">+</button>
+                    </div>
+                    <div class="steps-customize-container">
+                        <div id="stepsCustomize" class="steps-customize">
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group button-group">
+                    <button id="moveUpButton" class="move-button" disabled>&#8593; 上へ移動</button>
+                    <button id="moveDownButton" class="move-button" disabled>&#8595; 下へ移動</button>
+                    <button id="deleteButton" class="delete-button" disabled>選択中のコンテンツを削除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- インポートモーダル -->
+    <div id="importModal" class="import-modal-overlay" style="display:none;">
+        <div class="import-modal">
+            <h3>HTMLインポート</h3>
+            <textarea id="importTextarea" class="import-textarea" placeholder="HTMLコードを貼り付けてください"></textarea>
+            <div class="import-modal-buttons">
+                <button id="importApplyBtn" class="import-apply-button">反映</button>
+                <button id="importCancelBtn" class="import-cancel-button">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../common/common.js" type="module"></script>
+    <script src="../../common/image-modal/image-modal.js" type="module"></script>
+    <script src="./knowledge-editor.js" type="module"></script>
+</body>
+</html>
